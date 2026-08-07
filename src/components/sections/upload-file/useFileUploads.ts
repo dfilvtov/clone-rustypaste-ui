@@ -80,7 +80,52 @@ export type UploadState =
   | { state: "uploaded"; id: number; file: File; url: string }
   | { state: "canceled"; id: number; file: File };
 
-const defaultState = { files: [] };
+const MIB = 1024 * 1024;
+
+function fakeFile(name: string, type: string): File {
+  return new File([new Uint8Array(4 * MIB)], name, { type });
+}
+
+const defaultState: State =
+  import.meta.env.DEV && !import.meta.env.VITEST
+    ? {
+        files: [
+          {
+            state: "queued",
+            id: 9003,
+            file: fakeFile("document.pdf", "application/pdf"),
+            abort: new AbortController(),
+          },
+          {
+            state: "uploading",
+            id: 9002,
+            file: fakeFile("photo.jpg", "image/jpeg"),
+            abort: new AbortController(),
+            progress: 0.42,
+            bytesPerSecond: 512 * 1024,
+            estimatedSecondsRemaining: 8,
+          },
+          {
+            state: "uploaded",
+            id: 9001,
+            file: fakeFile("notes.txt", "text/plain"),
+            url: "http://localhost:5173/abc123.txt",
+          },
+          {
+            state: "errored",
+            id: 9004,
+            file: fakeFile("archive.zip", "application/zip"),
+            progress: 0.31,
+            error: "Request failed with status code 413",
+          },
+          {
+            state: "canceled",
+            id: 9005,
+            file: fakeFile("video.webm", "video/webm"),
+          },
+        ] satisfies ReadonlyArray<UploadState>,
+      }
+    : { files: [] };
 
 type Action =
   | { type: "accept-file"; id: number; file: File; abort: AbortController }
